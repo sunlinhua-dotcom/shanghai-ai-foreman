@@ -1,0 +1,24 @@
+{
+  "me": {
+    "name": "侬自家个声音",
+    "llm_wav": "~/cosyvoice3/voices/nat_sh.wav",
+    "llm_text": "（nat_sh.wav 里那段上海话的原文，一字不差）",
+    "wav": "~/cosyvoice3/voices/my_voice_ref.wav",
+    "gain_db": 0
+  },
+  "v2": {
+    "name": "第二种声音",
+    "llm_wav": "~/cosyvoice3/voices/nat_sh.wav",
+    "llm_text": "（同上）",
+    "wav": "~/cosyvoice3/voices/voice2_ref.wav",
+    "eq": {"shelf_db": 4},
+    "gain_db": 0
+  },
+  "v3": {
+    "name": "第三种声音",
+    "llm_wav": "~/cosyvoice3/voices/nat_sh.wav",
+    "llm_text": "（同上）",
+    "wav": "~/cosyvoice3/voices/voice3_ref.wav",
+    "gain_db": 0
+  }
+}

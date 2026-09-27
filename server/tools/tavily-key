@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# 给小智录 Tavily 搜索 key（可以几个账号一起录，服务端轮着用）：终端敲 tavily-key，按提示一个个粘。
+# key 只写到 EX10 的 .env（权限 600，不进版本库），不进命令行参数、不打印，屏幕只显示末 4 位。
+set -euo pipefail
+
+EX10="${EX10:-xiaozhi@your-server}"
+DEST="/srv/xiaozhi-server"
+
+echo "给小智录 Tavily 搜索 key（tavily.com → API Keys，tvly- 开头那串）。"
+echo "有几个账号就录几个，一次粘一个、回车；全部录完再直接按一次回车。"
+echo "粘贴时屏幕不显示是正常的。这次录的会替换掉原来存的。"
+KEYS=()
+i=1
+while [ "$i" -le 8 ]; do
+  read -rs -p "第 $i 个 key（录完了就直接回车）: " K
+  echo
+  K="$(printf '%s' "$K" | tr -d '[:space:]')"
+  [ -n "$K" ] || break
+  KEYS+=("$K")
+  echo "    收到（…${K: -4}）"
+  i=$((i + 1))
+done
+[ "${#KEYS[@]}" -gt 0 ] || { echo "一个都没录，原来的不动。"; exit 1; }
+
+echo "==> 连到 EX10 逐个验证并写入…"
+printf '%s\n' "${KEYS[@]}" | ssh "$EX10" "cd ${DEST} && .venv/bin/python tools/set_tavily_key.py" || {
+  echo "没写进去，原因见上面。改好再敲一次 tavily-key。"; exit 1; }
+
+echo "==> 重启小智服务…"
+ssh "$EX10" "sudo systemctl restart xiaozhi-server.service && sleep 3 && systemctl is-active xiaozhi-server.service"
+echo "好了。问盒子「今天有什么新闻」就能试。某个账号额度满了会自动换下一个，全满了退回自建搜索。"

@@ -1,0 +1,23 @@
+# systemd 模板：复制到 /etc/systemd/system/xiaozhi-server.service，按实际改 User 和路径，
+# 然后 sudo systemctl daemon-reload && sudo systemctl enable --now xiaozhi-server
+[Unit]
+Description=Xiaozhi self-hosted backend (OTA + WS, GLM brain)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=xiaozhi
+Group=xiaozhi
+WorkingDirectory=/srv/xiaozhi-server
+# 服务器连不上 huggingface.co 时，先把模型拷进 ~/.cache/huggingface 再离线加载
+Environment=HF_HUB_OFFLINE=1
+ExecStart=/srv/xiaozhi-server/.venv/bin/python -m app.main
+Restart=always
+RestartSec=3
+# 崩了带上日志尾巴，方便 journalctl 直接看原因
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

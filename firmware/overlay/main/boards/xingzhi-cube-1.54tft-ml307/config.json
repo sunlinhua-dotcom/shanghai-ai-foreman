@@ -1,0 +1,22 @@
+{
+    "target": "esp32s3",
+    "builds": [
+        {
+            "name": "xingzhi-cube-1.54tft-ml307",
+            "sdkconfig_append": [
+                "CONFIG_USE_CUSTOM_WAKE_WORD=y",
+                "CONFIG_CUSTOM_WAKE_WORD=\"dang zang mu zi\"",
+                "CONFIG_CUSTOM_WAKE_WORD_DISPLAY=\"打桩模子\"",
+                "CONFIG_CUSTOM_WAKE_WORD_THRESHOLD=20",
+                "CONFIG_SR_MN_CN_MULTINET7_QUANT=y",
+                "CONFIG_FREERTOS_HZ=1000"
+            ]
+        },
+        {
+            "name": "xingzhi-cube-1.54tft-ml307-wechatui",
+            "sdkconfig_append": [
+                "CONFIG_USE_WECHAT_MESSAGE_STYLE=y"
+            ]
+        }
+    ]
+}

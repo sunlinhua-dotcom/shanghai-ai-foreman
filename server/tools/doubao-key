@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# 给小智录豆包语音（火山引擎）的 API Key：终端敲 doubao-key，按提示粘一次。
+# key 只写到 EX10 的 .env（权限 600，不进版本库），不进命令行参数、不打印，屏幕只显示末 4 位。
+set -euo pipefail
+
+EX10="${EX10:-xiaozhi@your-server}"
+DEST="/srv/xiaozhi-server"
+
+echo "给小智录豆包语音的 API Key。"
+echo "在哪拿：豆包语音控制台 https://console.volcengine.com/speech/new"
+echo "        概览页「API 接入」里有一个默认的，或者左边「API Key 管理」→ 复制。"
+echo "粘贴时屏幕不显示是正常的，粘完直接回车。"
+read -rs -p "API Key: " K
+echo
+K="$(printf '%s' "$K" | tr -d '[:space:]')"
+[ -n "$K" ] || { echo "没收到 key，原来的不动。"; exit 1; }
+echo "    收到（…${K: -4}）"
+
+echo "==> 连到 EX10，试合成一句「你好」，能用再存…"
+printf '%s\n' "$K" | ssh "$EX10" "cd ${DEST} && .venv/bin/python tools/set_volc_key.py" || {
+  echo "没存进去，原因见上面。改好再敲一次 doubao-key。"; exit 1; }
+echo "好了。回到对话里说一声，我出上海话样音给你挑。"

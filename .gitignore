@@ -1,0 +1,13 @@
+.DS_Store
+# server
+server/.venv/
+server/.env
+server/logs/
+server/tmp/
+server/models/
+__pycache__/
+*.pyc
+*.pid
+# firmware: setup.sh clones upstream here
+firmware/xiaozhi-esp32/
+firmware/overlay/scripts/eyesim/out/

@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# 把飞书机器人的凭据填到 EX10 的 .env 里，一路问到底，不用手抄长命令。
+# 用法：终端里敲 feishu-key 就行。
+set -euo pipefail
+
+EX10="${EX10:-xiaozhi@your-server}"
+DEST="/srv/xiaozhi-server"
+DEF_APP_ID="cli_aaacd71e8e391bb3"
+DEF_OPEN_ID="ou_8d0e1a23ba4aa89777fc5e6130e823be"
+
+echo "给小智配飞书入口。凭据只写到 EX10 那台机器的 .env（权限 600，不进版本库）。"
+echo "App ID / Secret 在飞书开放平台 → 你的应用 → 凭证与基础信息 里。"
+echo
+
+read -r -p "1/3  App ID [${DEF_APP_ID}]: " APP_ID
+APP_ID="${APP_ID:-$DEF_APP_ID}"
+
+echo "2/3  App Secret —— 输入时屏幕不显示是正常的，直接粘贴然后回车。"
+read -rs -p "     Secret: " APP_SECRET
+echo
+[ -n "$APP_SECRET" ] || { echo "没输入 Secret，退出。"; exit 1; }
+
+read -r -p "3/3  只允许谁跟机器人聊（open_id，回车用你自己的）[${DEF_OPEN_ID}]: " OPEN_ID
+OPEN_ID="${OPEN_ID:-$DEF_OPEN_ID}"
+
+echo
+echo "==> 连到 EX10 验证并写入…"
+printf '%s\n%s\n%s\n' "$APP_ID" "$APP_SECRET" "$OPEN_ID" | ssh "$EX10" '
+set -eu
+read -r APP_ID; read -r APP_SECRET; read -r OPEN_ID
+cd '"$DEST"'
+
+# 先拿一次 tenant_access_token，输错了当场就知道，不用等服务起不来再猜
+RESP=$(printf "{\"app_id\":\"%s\",\"app_secret\":\"%s\"}" "$APP_ID" "$APP_SECRET" \
+  | curl -s --noproxy "*" -m 15 -X POST \
+      https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal \
+      -H "Content-Type: application/json" -d @- )
+case "$RESP" in
+  *"\"code\":0"*) echo "    凭据验证通过。" ;;
+  *) echo "    凭据不对，飞书说：$RESP"; echo "    常见原因：Secret 复制时漏了字符、App ID 和别的应用弄混了、应用还没发布版本。"; exit 1 ;;
+esac
+
+[ -f .env ] || { echo "    ${PWD}/.env 不存在，先按 README 建好再来。"; exit 1; }
+cp -p .env .env.bak.$(date +%Y%m%d-%H%M%S)
+grep -v "^XZ_FEISHU_" .env > .env.stripped || true
+{
+  cat .env.stripped
+  printf "\n# 飞书入口（feishu-key 写入，%s）\n" "$(date +%F\ %T)"
+  printf "XZ_FEISHU_ENABLED=1\n"
+  printf "XZ_FEISHU_APP_ID=%s\n" "$APP_ID"
+  printf "XZ_FEISHU_APP_SECRET=%s\n" "$APP_SECRET"
+  printf "XZ_FEISHU_ALLOWED_OPEN_IDS=%s\n" "$OPEN_ID"
+} > .env.new
+mv .env.new .env
+rm -f .env.stripped
+chmod 600 .env
+echo "    已写入 ${PWD}/.env"
+
+sudo systemctl restart xiaozhi-server.service
+sleep 3
+systemctl is-active xiaozhi-server.service
+'
+
+echo
+echo "==> 看一眼飞书长连接起没起："
+ssh "$EX10" "grep -a '飞书' ${DEST}/logs/server.log | tail -5 || true"
+echo
+echo "好了。去飞书里找你那个机器人，打字或者用输入框的「语音转文字」说话就能聊。"

@@ -1,0 +1,16 @@
+[Unit]
+Description=Shanghainese TTS for the xiaozhi box: WenetSpeech-Wu CosyVoice2-Wu-SFT, multi-voice (GX10, :8097)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=xiaozhi
+WorkingDirectory=/home/xiaozhi/cosyvoice3/CosyVoice
+Environment=WU_VOICES=/home/xiaozhi/cosyvoice3/voices/voices.json
+Environment=COSY_PORT=8097
+ExecStart=/home/xiaozhi/cosyvoice3/.venv/bin/python wu_server.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

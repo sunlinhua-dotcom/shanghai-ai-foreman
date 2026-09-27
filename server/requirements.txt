@@ -1,0 +1,11 @@
+aiohttp>=3.9
+anthropic>=0.40
+av>=12
+numpy>=1.26
+opuslib-next>=1.1.5
+python-dotenv>=1.0
+soxr>=0.5
+webrtcvad-wheels>=2.0.14
+faster-whisper>=1.1.0
+sherpa-onnx>=1.13.7
+lark-oapi>=1.7
